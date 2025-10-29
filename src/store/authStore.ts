@@ -1,110 +1,146 @@
-import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
-import { Profile } from '../types/database';
-import { User } from '@supabase/supabase-js';
+// src/store/authStore.ts
+import { create } from "zustand";
+import { authAPI } from "../lib/api";
+
+type Role = "admin" | "customer" | string;
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  role?: Role;
+}
 
 interface AuthState {
   user: User | null;
-  profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    phone?: string
+  ) => Promise<{ error: Error | null }>;
+  adminSignIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  adminSignIn: (email: string, password: string) => Promise<{ error: Error | null }>;
 }
+
+const TOKEN_KEYS = ["token", "access"];
+const getAnyToken = () =>
+  TOKEN_KEYS.map((k) => localStorage.getItem(k)).find(Boolean) || null;
+const setTokenEverywhere = (t: string | null) => {
+  if (!t) TOKEN_KEYS.forEach((k) => localStorage.removeItem(k));
+  else TOKEN_KEYS.forEach((k) => localStorage.setItem(k, t));
+};
+const decode = (t: string) => {
+  try {
+    return JSON.parse(atob(t.split(".")[1]));
+  } catch {
+    return null;
+  }
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  profile: null,
   isAdmin: false,
   loading: true,
 
   initialize: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
-
-        set({ user: session.user, profile: profile || null, loading: false });
-      } else {
+      const token = getAnyToken();
+      if (!token) {
         set({ loading: false });
+        return;
       }
+      // optimistic set from JWT
+      const p = decode(token);
+      if (p?.email)
+        set({
+          user: { id: p.sub, email: p.email, role: p.role, name: p.name },
+          isAdmin: p.role === "admin",
+        });
 
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          set({ user: session.user, profile: profile || null });
-        } else {
-          set({ user: null, profile: null, isAdmin: false });
-        }
+      const me = await authAPI.getMe();
+      set({
+        user: {
+          id: me._id ?? me.id,
+          email: me.email,
+          name: me.name,
+          phone: me.phone,
+          role: me.role,
+        },
+        isAdmin: me.role === "admin",
+        loading: false,
       });
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      set({ loading: false });
+    } catch (e) {
+      console.error("Auth initialize failed:", e);
+      setTokenEverywhere(null);
+      set({ user: null, isAdmin: false, loading: false });
     }
   },
 
-  signIn: async (email: string, password: string) => {
+  signIn: async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const data = await authAPI.login(email, password);
+      setTokenEverywhere(data?.token);
+      const me = data?.user ?? (await authAPI.getMe());
+      set({
+        user: {
+          id: me._id ?? me.id,
+          email: me.email,
+          name: me.name,
+          phone: me.phone,
+          role: me.role,
+        },
+        isAdmin: me.role === "admin",
       });
-
-      if (error) return { error };
-
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .maybeSingle();
-
-        set({ user: data.user, profile: profile || null });
-      }
-
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
   },
 
-  signUp: async (email: string, password: string, name: string, phone?: string) => {
+  adminSignIn: async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+      const data = await authAPI.adminLogin(email, password);
+      setTokenEverywhere(data?.token);
+      const me = data?.user ?? (await authAPI.getMe());
+      set({
+        user: {
+          id: me._id ?? me.id,
+          email: me.email,
+          name: me.name,
+          phone: me.phone,
+          role: me.role,
+        },
+        isAdmin: me.role === "admin",
       });
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  },
 
-      if (error) return { error };
-
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            name,
-            phone: phone || null,
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
-      }
-
+  signUp: async (email, password, name, phone) => {
+    try {
+      const data = await authAPI.register(email, password, name, phone);
+      setTokenEverywhere(data?.token);
+      const me = data?.user ?? (await authAPI.getMe());
+      set({
+        user: {
+          id: me._id ?? me.id,
+          email: me.email,
+          name: me.name,
+          phone: me.phone,
+          role: me.role,
+        },
+        isAdmin: me.role === "admin",
+      });
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -112,40 +148,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, profile: null, isAdmin: false });
-  },
-
-  adminSignIn: async (email: string, password: string) => {
     try {
-      const { data: admin } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (!admin) {
-        return { error: new Error('Invalid credentials') };
-      }
-
-      const bcrypt = await import('bcryptjs');
-      const isValid = await bcrypt.compare(password, admin.password_hash);
-
-      if (!isValid) {
-        return { error: new Error('Invalid credentials') };
-      }
-
-      await supabase
-        .from('admins')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', admin.id);
-
-      set({ isAdmin: true, user: { id: admin.id, email: admin.email } as User });
-
-      return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+      await authAPI.logout();
+    } finally {
+      setTokenEverywhere(null);
+      set({ user: null, isAdmin: false });
     }
   },
 }));

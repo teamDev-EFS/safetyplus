@@ -1,16 +1,16 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { supabase } from '../lib/supabase';
-import { CartItem, CartTotals } from '../types/database';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { cartAPI } from "../lib/api";
+import { CartItem, CartTotals } from "../types/database";
 
 interface CartState {
   items: CartItem[];
   totals: CartTotals;
-  addItem: (item: Omit<CartItem, 'qty'> & { qty?: number }) => void;
+  addItem: (item: Omit<CartItem, "qty"> & { qty?: number }) => void;
   updateQuantity: (productId: string, qty: number) => void;
   removeItem: (productId: string) => void;
   clear: () => void;
-  syncWithServer: (userId: string) => Promise<void>;
+  syncWithServer: () => Promise<void>;
   calculateTotals: () => void;
 }
 
@@ -26,7 +26,9 @@ export const useCartStore = create<CartState>()(
       },
 
       addItem: (item) => {
-        const existingItem = get().items.find((i) => i.product_id === item.product_id);
+        const existingItem = get().items.find(
+          (i) => i.product_id === item.product_id
+        );
 
         if (existingItem) {
           set({
@@ -43,7 +45,7 @@ export const useCartStore = create<CartState>()(
         }
 
         get().calculateTotals();
-        get().syncWithServer('');
+        get().syncWithServer();
       },
 
       updateQuantity: (productId, qty) => {
@@ -59,7 +61,7 @@ export const useCartStore = create<CartState>()(
         });
 
         get().calculateTotals();
-        get().syncWithServer('');
+        get().syncWithServer();
       },
 
       removeItem: (productId) => {
@@ -68,55 +70,55 @@ export const useCartStore = create<CartState>()(
         });
 
         get().calculateTotals();
-        get().syncWithServer('');
+        get().syncWithServer();
       },
 
       clear: () => {
-        set({ items: [], totals: { subtotal: 0, tax: 0, shipping: 0, grand: 0 } });
+        set({
+          items: [],
+          totals: { subtotal: 0, tax: 0, shipping: 0, grand: 0 },
+        });
       },
 
-      syncWithServer: async (userId) => {
-        if (!userId) return;
-
-        const { items, totals } = get();
-
+      syncWithServer: async () => {
         try {
-          const { data: existingCart } = await supabase
-            .from('carts')
-            .select('id')
-            .eq('user_id', userId)
-            .maybeSingle();
+          const { items } = get();
 
-          if (existingCart) {
-            await supabase
-              .from('carts')
-              .update({ items, totals })
-              .eq('id', existingCart.id);
-          } else {
-            await supabase
-              .from('carts')
-              .insert({ user_id: userId, items, totals });
+          // Get current cart from server
+          const serverCart = await cartAPI.get();
+
+          // Sync items
+          for (const localItem of items) {
+            const serverItem = serverCart.items.find(
+              (si: any) => si.productId === localItem.product_id
+            );
+
+            if (serverItem) {
+              if (serverItem.qty !== localItem.qty) {
+                await cartAPI.update(localItem.product_id, localItem.qty);
+              }
+            } else {
+              await cartAPI.add(localItem.product_id, localItem.qty);
+            }
           }
 
-          await supabase
-            .from('notifications')
-            .insert({
-              type: 'cart_updated',
-              payload: {
-                user_id: userId,
-                items_count: items.length,
-                cart_preview: items.slice(0, 3),
-                timestamp: new Date().toISOString(),
-              },
-            });
+          // Remove items not in local cart
+          for (const serverItem of serverCart.items) {
+            if (!items.find((i) => i.product_id === serverItem.productId)) {
+              await cartAPI.remove(serverItem.productId);
+            }
+          }
         } catch (error) {
-          console.error('Cart sync error:', error);
+          console.error("Cart sync error:", error);
         }
       },
 
       calculateTotals: () => {
         const items = get().items;
-        const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+        const subtotal = items.reduce(
+          (sum, item) => sum + item.price * item.qty,
+          0
+        );
         const tax = subtotal * 0.18;
         const shipping = subtotal > 1000 ? 0 : 50;
         const grand = subtotal + tax + shipping;
@@ -125,7 +127,7 @@ export const useCartStore = create<CartState>()(
       },
     }),
     {
-      name: 'cart-storage',
+      name: "cart-storage",
     }
   )
 );

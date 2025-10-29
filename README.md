@@ -1,187 +1,264 @@
 # SafetyPlus E-Commerce Platform
 
-A comprehensive, production-ready e-commerce platform for safety equipment with modern features including wishlist, contact system, and complete content management.
-
-## 🎉 Latest Updates - Rebranded to SafetyPlus
-
-### Brand Refresh
-- **New Identity**: SafetyPro → SafetyPlus with green color scheme
-- **Logo Update**: Green gradient (from-green-500 to-emerald-600)
-- **Enhanced Navigation**: Shop, Gallery, Blog, About, Team, Contact, Track Order
-
-### New Features
-
-#### ✅ Complete Contact System
-- **Contact Page** (`/contact`) with form validation
-- Head office cards with address, phones, emails
-- **Calendly Integration** (embedded + fallback button)
-- Branches grid with maps
-- Bank & GST details panels
-
-#### ✅ Wishlist Functionality
-- Wishlist icon with badge in navbar
-- Add/remove from product cards and detail pages
-- Persistent storage with Supabase sync
-- Ready for full wishlist page implementation
-
-#### ✅ Enhanced Database
-- `team_members` - Team profiles
-- `branches` - Company locations
-- `albums` & `album_images` - Gallery system
-- `contact_messages` - Form submissions
-- `pages_content` - Dynamic content
-- Extended `settings` - Bank, GST, Calendly
-
-## Quick Start
-
-```bash
-npm install
-npm run dev     # Opens at http://localhost:5173
-npm run build   # Production build
-```
-
-## Environment Setup
-
-`.env` (already configured):
-```
-VITE_SUPABASE_URL=your_url
-VITE_SUPABASE_ANON_KEY=your_key
-VITE_CALENDLY_URL=https://calendly.com/safetyplus/demo
-```
+A modern, full-stack e-commerce platform for safety equipment built with React, Node.js, MongoDB, and Express.
 
 ## Features
 
-### Customer Portal
-- Shop with advanced filters and search
-- Product detail with gallery and specs
-- Shopping cart with real-time totals
-- Checkout with multiple payment methods
-- Wishlist to save favorites
-- **Contact page** with Calendly scheduler
-- Account management
-- Light/Dark theme
-- Fully responsive
-
-### Admin Portal
-- Dashboard with KPIs
-- Product management
-- Order processing
-- Settings configuration (Bank, GST, Calendly)
+- 🛍️ **Product Catalog**: Browse and search through a comprehensive safety equipment catalog
+- 🛒 **Shopping Cart**: Add to cart, update quantities, and proceed to checkout
+- ❤️ **Wishlist**: Save favorite items for later
+- 📱 **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- 🌓 **Dark Mode**: Toggle between light and dark themes
+- 💬 **AI Assistant**: Chat with SafetyPlus, our AI assistant for product search, order tracking, and scheduling
+- 📧 **Contact Form**: Reach out to us through the contact page
+- 🏢 **Team & Gallery**: Learn about our team and browse company events
+- 📝 **Blog**: Read safety guides and industry updates
+- 🔔 **Real-time Notifications**: Get instant updates via Socket.IO
+- 👤 **Admin Panel**: Manage products, orders, and content
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
-- **State**: Zustand (auth, cart, wishlist)
-- **Data**: TanStack Query
-- **Backend**: Supabase (PostgreSQL, Auth, Storage, Realtime)
-- **Icons**: Lucide React
+### Frontend
 
-## Database
+- React 18 + TypeScript
+- Vite
+- React Router
+- Zustand for state management
+- React Query for data fetching
+- Tailwind CSS + shadcn/ui
+- Framer Motion
+- Socket.IO Client
 
-20+ tables including:
-- Products, Categories, Brands
-- Orders, Carts, Wishlists
-- Team Members, Branches, Albums
-- Contact Messages, Blog Posts
-- Settings with Bank/GST/Calendly
+### Backend
 
-All tables have Row Level Security (RLS) enabled.
+- Node.js 20 + Express
+- MongoDB with Mongoose
+- Socket.IO for real-time features
+- JWT for authentication
+- Nodemailer for email notifications
+- Multer for file uploads
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- MongoDB (local or cloud)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/yourusername/safetyplus.git
+cd safetyplus
+```
+
+2. **Install backend dependencies**
+
+```bash
+cd server
+npm install
+```
+
+3. **Install frontend dependencies**
+
+```bash
+cd ..
+npm install
+```
+
+4. **Set up environment variables**
+
+Create `server/.env`:
+
+```env
+NODE_ENV=development
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+
+MONGODB_URI=mongodb://localhost:27017/safetyplus
+
+JWT_SECRET=your-super-secret-jwt-key
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+COMPANY_NAME=SafetyPlus
+COMPANY_EMAIL=support@safetyplus.com
+COMPANY_PHONE=+91-XXXXXXXXXX
+
+CALENDLY_URL=https://calendly.com/safetyplus/demo-30min
+```
+
+Create `.env.local` in the root:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+5. **Run the application**
+
+Start the backend server:
+
+```bash
+cd server
+npm run dev
+```
+
+In a new terminal, start the frontend:
+
+```bash
+npm run dev
+```
+
+The app will be available at:
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:5000
 
 ## Project Structure
 
 ```
-src/
-├── components/
-│   ├── layout/      # Header (✅ updated), Footer, Layout
-│   └── ui/          # Button, Toaster
-├── pages/
-│   ├── HomePage.tsx
-│   ├── ShopPage.tsx
-│   ├── ProductDetailPage.tsx
-│   ├── CartPage.tsx
-│   ├── CheckoutPage.tsx
-│   ├── ContactPage.tsx        # ✅ NEW
-│   ├── LoginPage.tsx
-│   ├── RegisterPage.tsx
-│   └── admin/                 # Admin pages
-├── store/
-│   ├── authStore.ts
-│   ├── cartStore.ts
-│   └── wishlistStore.ts       # ✅ NEW
-└── lib/
-    ├── supabase.ts
-    └── utils.ts
+safetyplus/
+├── server/              # Backend application
+│   ├── models/         # MongoDB models
+│   ├── routes/         # API routes
+│   ├── middleware/     # Express middleware
+│   ├── uploads/        # Uploaded files
+│   └── index.js        # Server entry point
+├── src/                # Frontend application
+│   ├── components/    # React components
+│   ├── pages/         # Page components
+│   ├── store/         # Zustand stores
+│   ├── lib/           # Utilities and API client
+│   └── types/         # TypeScript types
+├── .env.local          # Frontend environment variables
+└── package.json        # Frontend dependencies
 ```
 
-## Implementation Guide
+## Available Scripts
 
-See `IMPLEMENTATION_GUIDE.md` for detailed specs on:
-- About, Team, Gallery, Blog pages
-- AI Assistant with Web Speech API
-- Enhanced product filters
-- Admin interfaces for new content
-- Edge Functions
+### Frontend
 
-## Sample Data
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-Includes:
-- 8 Products (6 categories, 4 brands)
-- 3 Team Members
-- 3 Branches (Coimbatore, Madurai, Chennai)
-- 3 Photo Albums
-- Bank & GST details
+### Backend
 
-## Admin Access
+- `npm run dev` - Start development server with nodemon
+- `npm run start` - Start production server
+- `npm run seed` - Seed database with initial data
 
-Create admin user:
-```sql
-INSERT INTO admins (email, password_hash, name, is_active)
-VALUES ('admin@safetyplus.com', '$2a$10$...', 'Admin', true);
-```
+## API Endpoints
 
-Login at `/admin/login`.
+### Authentication
 
-## Contact Integration
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user
 
-The contact page uses:
-1. **Form** → `contact_messages` table
-2. **Calendly** → Embedded iframe from settings
-3. **Branches** → Fetched from `branches` table
-4. **Bank/GST** → Read from `settings` table
+### Products
 
-## Roadmap
+- `GET /api/products` - Get all products (with filters)
+- `GET /api/products/:slug` - Get product by slug
+- `GET /api/products/featured/list` - Get featured products
 
-### Next: Content Pages
-- [ ] About Page
-- [ ] Team Page with member modals
-- [ ] Gallery with lightbox
-- [ ] Blog list and detail
-- [ ] Wishlist page UI
+### Cart
 
-### Future: Advanced Features
-- [ ] AI Assistant (chat + voice)
-- [ ] Enhanced filters
-- [ ] Order tracking
-- [ ] Email notifications (Edge Functions)
-- [ ] Payment gateway
-- [ ] Analytics dashboard
+- `GET /api/cart` - Get user's cart
+- `POST /api/cart/add` - Add item to cart
+- `PUT /api/cart/:productId` - Update cart item
+- `DELETE /api/cart/:productId` - Remove cart item
 
-## Scripts
+### Wishlist
+
+- `GET /api/wishlist` - Get user's wishlist
+- `POST /api/wishlist/add` - Add to wishlist
+- `DELETE /api/wishlist/remove/:productId` - Remove from wishlist
+
+### AI Assistant
+
+- `POST /api/ai/respond` - Get AI assistant response
+
+### Other
+
+- `GET /api/team` - Get team members
+- `GET /api/albums` - Get gallery albums
+- `GET /api/blog` - Get blog posts
+- `GET /api/branches` - Get branches
+- `POST /api/contact` - Submit contact form
+
+See server/routes/ for complete API documentation.
+
+## Features in Detail
+
+### AI Assistant (SafetyPlus AI Assistant)
+
+- Voice input and text-to-speech output
+- Product search and recommendations
+- Order tracking
+- Meeting scheduling via Calendly
+
+### Wishlist
+
+- Add/remove items from anywhere
+- Badge showing item count
+- Move items to cart
+- Guest users prompted to login
+
+### Admin Panel
+
+- Product management (CRUD)
+- Order management
+- Team member management
+- Gallery album management
+- Blog post management
+- Settings management
+
+## Deployment
+
+### Frontend
 
 ```bash
-npm run dev        # Development
-npm run build      # Production build
-npm run preview    # Preview build
-npm run lint       # Lint code
-npm run typecheck  # Type check
+npm run build
+# Deploy the dist/ folder to your hosting provider
 ```
+
+### Backend
+
+```bash
+npm run start
+# Use PM2 for process management in production
+```
+
+### Environment Variables
+
+Make sure to set all environment variables in production:
+
+- Update `JWT_SECRET` to a strong random string
+- Configure MongoDB connection string
+- Set SMTP credentials
+- Update frontend API URL to production backend URL
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
 
 ## Support
 
-- **Email**: support@safetyplus.com
-- **Phone**: 0422 4982221
-- **Address**: 168, Thirugnana Vinayakar Road, Coimbatore
-
----
-
-**SafetyPlus** - Your Safety, Our Priority
+For support, email support@safetyplus.com or join our Slack channel.

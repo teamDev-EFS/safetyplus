@@ -1,0 +1,64 @@
+/* AI Assistant Responsive Styles */
+
+/* Mobile full-screen sheet */
+@media (max-width: 479px) {
+  #assistant-dialog {
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  @supports (height: 100dvh) {
+    #assistant-dialog {
+      height: 100dvh;
+    }
+  }
+}
+
+/* Hide quick actions on very short viewports */
+@media (max-height: 580px) {
+  .assistant-quick-actions {
+    display: none !important;
+  }
+}
+
+/* Smooth scrolling for chat content */
+.chat-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area padding */
+.pb-safe {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+/* Hide scrollbar on quick actions */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #assistant-dialog,
+  #assistant-dialog * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* XL screens adjustments */
+@media (min-width: 1536px) {
+  #assistant-dialog {
+    width: 480px;
+    max-height: 820px;
+  }
+}

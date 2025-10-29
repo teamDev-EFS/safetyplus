@@ -1,8 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import "./styles/assistant.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-300: #6ee7b7;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857;
+  --brand-800: #065f46;
+  --brand-900: #064e3b;
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --ring: #10b981;
+  --link: #047857;
+}
+
+.dark {
+  --primary: #10b981;
+  --primary-foreground: #0b0f0c;
+  --ring: #34d399;
+  --link: #34d399;
+}
 
 @layer base {
   * {
@@ -11,5 +36,11 @@
 
   body {
     @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-brand-700 focus:ring-2 focus:ring-[var(--ring)];
   }
 }

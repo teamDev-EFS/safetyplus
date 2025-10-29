@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /account/
+
+Sitemap: https://safetyplus.co.in/sitemap.xml
+

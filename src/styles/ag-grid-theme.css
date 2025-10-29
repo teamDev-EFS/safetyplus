@@ -1,0 +1,18 @@
+/* Quartz theme refinements for SafetyPlus */
+.ag-theme-quartz.safetyplus {
+  --ag-font-size: 13px;
+  --ag-grid-size: 4px;
+  --ag-border-color: #e5e7eb;
+  --ag-header-background-color: #f8fafc;
+  --ag-header-foreground-color: #0f172a;
+  --ag-row-hover-color: #f1f5f9;
+  --ag-odd-row-background-color: #ffffff;
+  --ag-selected-row-background-color: #ecfdf5;
+  --ag-checkbox-unchecked-color: #94a3b8;
+  --ag-checkbox-checked-color: #059669; /* emerald-600 */
+  --ag-range-selection-background-color: rgba(16, 185, 129, 0.12);
+  --ag-header-column-resize-handle-color: #059669;
+  --ag-input-focus-border-color: #059669;
+  border-radius: 14px;
+  overflow: hidden;
+}

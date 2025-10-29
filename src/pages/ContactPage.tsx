@@ -1,90 +1,82 @@
-import { useState } from 'react';
-import { Layout } from '../components/layout/Layout';
-import { Button } from '../components/ui/Button';
-import { Mail, Phone, MapPin, Building2, Clock } from 'lucide-react';
-import { toast } from '../components/ui/Toaster';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { useState } from "react";
+import { Layout } from "../components/layout/Layout";
+import { Button } from "../components/ui/Button";
+import { Mail, Phone, MapPin, Building2, Clock } from "lucide-react";
+import { useToast } from "../hooks/useToast";
+import { useQuery } from "@tanstack/react-query";
+import { contactAPI, settingsAPI, branchesAPI } from "../lib/api";
 
 export function ContactPage() {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: '',
-    company: '',
-    mobile: '',
-    email: '',
-    subject: '',
-    message: '',
+    name: "",
+    company: "",
+    mobile: "",
+    email: "",
+    subject: "",
+    message: "",
     consent: false,
   });
   const [loading, setLoading] = useState(false);
 
   const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('settings')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
+    queryKey: ["settings"],
+    queryFn: () => settingsAPI.get(),
   });
 
   const { data: branches } = useQuery({
-    queryKey: ['branches'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('branches')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order');
-      return data || [];
-    },
+    queryKey: ["branches"],
+    queryFn: () => branchesAPI.getAll(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.consent) {
-      toast('Please accept the privacy policy', 'error');
+      toast({
+        title: "Privacy Policy Required",
+        description: "Please accept the privacy policy",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert({
-          name: formData.name,
-          company: formData.company,
-          mobile: formData.mobile,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-        });
+      await contactAPI.submit({
+        name: formData.name,
+        company: formData.company,
+        mobile: formData.mobile,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      });
 
-      if (error) throw error;
-
-      toast('Message sent successfully! We will contact you soon.', 'success');
+      toast({
+        title: "Success",
+        description: "Message sent successfully! We will contact you soon.",
+      });
       setFormData({
-        name: '',
-        company: '',
-        mobile: '',
-        email: '',
-        subject: '',
-        message: '',
+        name: "",
+        company: "",
+        mobile: "",
+        email: "",
+        subject: "",
+        message: "",
         consent: false,
       });
     } catch (error) {
-      console.error('Contact form error:', error);
-      toast('Failed to send message. Please try again.', 'error');
+      console.error("Contact form error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
-
-  const calendlyUrl = settings?.calendly_url || 'https://calendly.com';
 
   return (
     <Layout>
@@ -115,10 +107,13 @@ export function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Address</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    # 168, Thirugnana Vinayakar Road<br />
-                    Nehru Nagar (East)<br />
-                    Coimbatore - 641 029<br />
-                    Tamil Nadu, India
+                    New Siyaganj, Unit No. AS-22,
+                    <br />
+                    HTL Unit No.2 Block No. A-4,
+                    <br />
+                    Mal Godown Road,
+                    <br />
+                    Indore 452 007 (M.P.) India
                   </p>
                 </div>
               </div>
@@ -132,8 +127,16 @@ export function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Phone Numbers</h3>
                   <div className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <p><span className="font-medium">Customer Care:</span> 0422 4982221</p>
-                    <p><span className="font-medium">Enquiries:</span> +91 98765 43210</p>
+                    <p>
+                      <span className="font-medium">Phone:</span>{" "}
+                      0731-2430082-83
+                    </p>
+                    <p>
+                      <span className="font-medium">Mobile:</span> 94248-36079
+                    </p>
+                    <p>
+                      <span className="font-medium">Fax:</span> 0731-2430084
+                    </p>
                   </div>
                 </div>
               </div>
@@ -145,11 +148,14 @@ export function ContactPage() {
                   <Mail className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Email Addresses</h3>
+                  <h3 className="font-semibold text-lg mb-2">
+                    Email Addresses
+                  </h3>
                   <div className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <p><span className="font-medium">Online Sales:</span> sales@safetyplus.com</p>
-                    <p><span className="font-medium">HR Enquiries:</span> hr@safetyplus.com</p>
-                    <p><span className="font-medium">Support:</span> support@safetyplus.com</p>
+                    <p>
+                      <span className="font-medium">Marketing:</span>{" "}
+                      marketing@safetyplus.co.in
+                    </p>
                   </div>
                 </div>
               </div>
@@ -177,26 +183,37 @@ export function ContactPage() {
               Send Us a Message
             </h2>
 
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-md space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-md space-y-6"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Full Name *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Full Name *
+                  </label>
                   <input
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Company Name *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Company Name *
+                  </label>
                   <input
                     type="text"
                     required
                     value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, company: e.target.value })
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -204,47 +221,63 @@ export function ContactPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Mobile Number *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Mobile Number *
+                  </label>
                   <input
                     type="tel"
                     required
                     pattern="[0-9]{10,15}"
                     value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, mobile: e.target.value })
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Email Address *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Subject *</label>
+                <label className="block text-sm font-medium mb-2">
+                  Subject *
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Message *</label>
+                <label className="block text-sm font-medium mb-2">
+                  Message *
+                </label>
                 <textarea
                   required
                   rows={5}
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                 />
               </div>
@@ -255,52 +288,28 @@ export function ContactPage() {
                     type="checkbox"
                     required
                     checked={formData.consent}
-                    onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, consent: e.target.checked })
+                    }
                     className="mt-1 w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    I agree to the privacy policy and consent to SafetyPlus storing and processing my data for the purpose of responding to my inquiry.
+                    I agree to the privacy policy and consent to SafetyPlus
+                    storing and processing my data for the purpose of responding
+                    to my inquiry.
                   </span>
                 </label>
               </div>
 
-              <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                {loading ? 'Sending...' : 'Send Message'}
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send Message"}
               </Button>
             </form>
-          </div>
-        </div>
-
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-4">
-            Schedule a Meeting
-          </h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-            Book a convenient time to speak with our safety experts about your specific requirements.
-          </p>
-
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg overflow-hidden max-w-4xl mx-auto">
-            <div className="aspect-[16/10] relative">
-              <iframe
-                src={calendlyUrl}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                className="absolute inset-0"
-                title="Schedule a Meeting"
-              />
-            </div>
-          </div>
-
-          <div className="text-center mt-6">
-            <a
-              href={calendlyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 transition"
-            >
-              Open Calendly in New Tab
-            </a>
           </div>
         </div>
 
@@ -312,7 +321,10 @@ export function ContactPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {branches.map((branch) => (
-                <div key={branch.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition">
+                <div
+                  key={branch.id}
+                  className="bg-white dark:bg-gray-900 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition"
+                >
                   {branch.image_path && (
                     <img
                       src={branch.image_path}
@@ -330,7 +342,12 @@ export function ContactPage() {
                       <div>
                         <p className="font-medium mb-1">Address:</p>
                         {branch.address_lines.map((line, idx) => (
-                          <p key={idx} className="text-gray-600 dark:text-gray-400">{line}</p>
+                          <p
+                            key={idx}
+                            className="text-gray-600 dark:text-gray-400"
+                          >
+                            {line}
+                          </p>
                         ))}
                       </div>
 
@@ -338,7 +355,12 @@ export function ContactPage() {
                         <div>
                           <p className="font-medium mb-1">Phone:</p>
                           {branch.phones.map((phone, idx) => (
-                            <p key={idx} className="text-gray-600 dark:text-gray-400">{phone}</p>
+                            <p
+                              key={idx}
+                              className="text-gray-600 dark:text-gray-400"
+                            >
+                              {phone}
+                            </p>
                           ))}
                         </div>
                       )}
@@ -347,7 +369,12 @@ export function ContactPage() {
                         <div>
                           <p className="font-medium mb-1">Email:</p>
                           {branch.emails.map((email, idx) => (
-                            <p key={idx} className="text-gray-600 dark:text-gray-400">{email}</p>
+                            <p
+                              key={idx}
+                              className="text-gray-600 dark:text-gray-400"
+                            >
+                              {email}
+                            </p>
                           ))}
                         </div>
                       )}
@@ -371,53 +398,6 @@ export function ContactPage() {
             </div>
           </div>
         )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold mb-4">Bank Details</h3>
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">Bank Name:</dt>
-                <dd className="font-semibold">{settings?.bank_details?.bank_name || 'HDFC Bank'}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">Account No:</dt>
-                <dd className="font-semibold">{settings?.bank_details?.account_no || 'XXXXXXXXXXXX'}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">Branch:</dt>
-                <dd className="font-semibold">{settings?.bank_details?.branch || 'Coimbatore'}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">IFSC Code:</dt>
-                <dd className="font-semibold">{settings?.bank_details?.ifsc || 'HDFC0000XXX'}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">SWIFT Code:</dt>
-                <dd className="font-semibold">{settings?.bank_details?.swift || 'HDFCINBB'}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold mb-4">GST Details</h3>
-            <dl className="space-y-3 text-sm">
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">GSTIN:</dt>
-                <dd className="font-semibold text-lg">{settings?.gst_details?.gstin || '33XXXXXXXXXXXXX'}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-gray-600 dark:text-gray-400">GST Type:</dt>
-                <dd className="font-semibold">{settings?.gst_details?.type || 'Regular'}</dd>
-              </div>
-              <div className="pt-4 border-t border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  We are a registered GST dealer. All invoices include applicable GST charges.
-                </p>
-              </div>
-            </dl>
-          </div>
-        </div>
       </div>
     </Layout>
   );

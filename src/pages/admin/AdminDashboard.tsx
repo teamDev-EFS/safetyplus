@@ -1,58 +1,164 @@
-import { useAuthStore } from '../../store/authStore';
-import { Navigate, Link } from 'react-router-dom';
-import { Button } from '../../components/ui/Button';
-import { Package, ShoppingCart, Users, BarChart3 } from 'lucide-react';
+// src/pages/admin/AdminDashboard.tsx
+import { useEffect, useRef } from "react";
+import { Navigate } from "react-router-dom";
+import Highcharts from "highcharts";
+import { applyGreenTheme } from "../../lib/highchartsTheme";
+import { useAuthStore } from "../../store/authStore";
+import { Package, ShoppingCart, Users, BarChart3 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { productsAPI, ordersAPI } from "../../lib/api";
 
 export function AdminDashboard() {
   const { isAdmin } = useAuthStore();
+  const chartRef = useRef<HTMLDivElement>(null);
+  const ordersChartRef = useRef<HTMLDivElement>(null);
 
-  if (!isAdmin) {
-    return <Navigate to="/admin/login" replace />;
-  }
+  // Fetch real data from APIs
+  const { data: productsData } = useQuery({
+    queryKey: ["admin-products"],
+    queryFn: () => productsAPI.adminList(),
+    enabled: isAdmin,
+  });
+
+  const { data: ordersData } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: () => ordersAPI.adminGetAll(),
+    enabled: isAdmin,
+  });
+
+  useEffect(() => {
+    applyGreenTheme();
+  }, []);
+
+  useEffect(() => {
+    if (chartRef.current && ordersData) {
+      // Calculate monthly sales from orders
+      const monthlySales = [0, 0, 0, 0, 0, 0]; // Jan-Jun
+
+      ordersData.forEach((order: any) => {
+        const orderDate = new Date(order.createdAt);
+        const month = orderDate.getMonth();
+        if (month >= 0 && month <= 5) {
+          // Jan-Jun
+          monthlySales[month] += order.totalAmount || 0;
+        }
+      });
+
+      Highcharts.chart(chartRef.current, {
+        chart: { type: "column", height: 300 },
+        title: { text: "Monthly Sales" },
+        xAxis: { categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"] },
+        yAxis: { title: { text: "Sales (₹)" } },
+        series: [
+          {
+            type: "column",
+            name: "Sales",
+            data: monthlySales,
+          },
+        ],
+      });
+    }
+  }, [ordersData]);
+
+  useEffect(() => {
+    if (ordersChartRef.current && ordersData) {
+      // Calculate order status distribution
+      const statusCounts: { [key: string]: number } = {};
+      ordersData.forEach((order: any) => {
+        const status = order.status || "pending";
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      const statusData = Object.entries(statusCounts).map(
+        ([status, count]) => ({
+          name: status.charAt(0).toUpperCase() + status.slice(1),
+          y: count,
+        })
+      );
+
+      Highcharts.chart(ordersChartRef.current, {
+        chart: { type: "pie", height: 300 },
+        title: { text: "Order Status Distribution" },
+        series: [
+          {
+            type: "pie",
+            name: "Orders",
+            data: statusData,
+          },
+        ],
+      });
+    }
+  }, [ordersData]);
+
+  if (!isAdmin) return <Navigate to="/admin/login" replace />;
+
+  // Calculate real statistics
+  const totalProducts = productsData?.total || 0;
+  const totalOrders = ordersData?.length || 0;
+  const totalCustomers = 0; // No users API available
+  const totalRevenue =
+    ordersData?.reduce(
+      (sum: number, order: any) => sum + (order.totalAmount || 0),
+      0
+    ) || 0;
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    } else if (amount >= 1000) {
+      return `₹${(amount / 1000).toFixed(1)}K`;
+    }
+    return `₹${amount}`;
+  };
 
   const stats = [
-    { label: 'Total Products', value: '124', icon: Package, color: 'from-blue-500 to-blue-600' },
-    { label: 'Total Orders', value: '45', icon: ShoppingCart, color: 'from-green-500 to-green-600' },
-    { label: 'Customers', value: '89', icon: Users, color: 'from-purple-500 to-purple-600' },
-    { label: 'Revenue', value: '₹2.4L', icon: BarChart3, color: 'from-amber-500 to-orange-600' },
+    { label: "Total Products", value: totalProducts.toString(), icon: Package },
+    {
+      label: "Total Orders",
+      value: totalOrders.toString(),
+      icon: ShoppingCart,
+    },
+    { label: "Customers", value: totalCustomers.toString(), icon: Users },
+    { label: "Revenue", value: formatCurrency(totalRevenue), icon: BarChart3 },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <Link to="/">
-            <Button variant="outline" size="sm">View Store</Button>
-          </Link>
-        </div>
-      </header>
+    <div>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+        Dashboard
+      </h1>
 
-      <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-3xl font-bold mb-1">{stat.value}</div>
-              <div className="text-gray-600 text-sm">{stat.label}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {stats.map((s, i) => (
+          <div
+            key={i}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl grid place-items-center mb-4">
+              <s.icon className="w-6 h-6 text-white" />
             </div>
-          ))}
+            <div className="text-3xl font-bold mb-1 text-gray-900 dark:text-white">
+              {s.value}
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+            Sales Overview
+          </h2>
+          <div ref={chartRef} />
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Link to="/admin/products" className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-            <Package className="w-8 h-8 text-amber-600 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Manage Products</h2>
-            <p className="text-gray-600">Add, edit, and organize your product catalog</p>
-          </Link>
-
-          <Link to="/admin/orders" className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-            <ShoppingCart className="w-8 h-8 text-green-600 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Manage Orders</h2>
-            <p className="text-gray-600">View and process customer orders</p>
-          </Link>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+            Order Status
+          </h2>
+          <div ref={ordersChartRef} />
         </div>
       </div>
     </div>

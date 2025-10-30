@@ -38,21 +38,38 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const httpServer = createServer(app);
+// Build allowed origins from env (supports comma-separated lists) and sensible defaults
+const envOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.PUBLIC_WEB_URL,
+  process.env.FRONTEND_URLS,
+  process.env.PUBLIC_WEB_URLS,
+  process.env.CORS_ALLOWED_ORIGINS,
+]
+  .filter(Boolean)
+  .flatMap((value) => value.split(",").map((v) => v.trim()))
+  .filter(Boolean);
+
+const defaultOrigins = [
+  "http://localhost:5173",
+  // Netlify preview/main sites
+  "https://safetyplusco.netlify.app",
+  "https://safetyplus.netlify.app",
+  // Primary domains
+  "https://www.safetyplus.co.in",
+  "https://safetyplus.co.in",
+];
+
+const allowedOrigins = Array.from(new Set([...envOrigins, ...defaultOrigins]));
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 });
 
 // CORS configuration - allowlist for production
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.PUBLIC_WEB_URL,
-  "http://localhost:5173",
-  "https://safetyplus.netlify.app",
-  "https://safetyplus.co.in",
-].filter(Boolean);
 
 app.use(
   cors({

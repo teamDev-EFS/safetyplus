@@ -1,5 +1,29 @@
 // src/lib/api.ts
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+function resolveApiBaseUrl(): string {
+  const fromEnv = (import.meta as any).env?.VITE_API_URL as string | undefined;
+  if (fromEnv && typeof fromEnv === "string" && fromEnv.trim()) {
+    return fromEnv.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+
+    // Primary production domain
+    if (host.endsWith("safetyplus.co.in")) {
+      return "https://api.safetyplus.co.in"; // point this DNS to Render backend
+    }
+
+    // Netlify previews or main site
+    if (host.endsWith("netlify.app")) {
+      // fallback to Render default domain if custom domain not set yet
+      return "https://safetyplus-backend.onrender.com";
+    }
+  }
+
+  return "http://localhost:5000";
+}
+
+const API_URL = `${resolveApiBaseUrl()}/api`;
 
 // Shared fetch helper (handles JSON & FormData, 204s)
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {

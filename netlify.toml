@@ -1,11 +1,14 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  [build.environment]
+    # Update to your actual Render service URL if different
+    VITE_API_URL = "https://safetyplus-backend.onrender.com"
 
 # Redirect sitemap.xml to backend (UPDATE with your actual backend URL)
 [[redirects]]
   from = "/sitemap.xml"
-  to = "https://your-backend.onrender.com/api/meta/sitemap.xml"
+  to = "https://safetyplus-backend.onrender.com/api/meta/sitemap.xml"
   status = 200
   force = true
 

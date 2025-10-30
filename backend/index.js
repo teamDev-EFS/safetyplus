@@ -38,6 +38,8 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const httpServer = createServer(app);
+// Behind Render proxy: trust first proxy so rate-limit/IP works
+app.set("trust proxy", 1);
 // Build allowed origins from env (supports comma-separated lists) and sensible defaults
 const envOrigins = [
   process.env.FRONTEND_URL,

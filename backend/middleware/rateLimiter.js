@@ -12,8 +12,19 @@ export const aiLimiter = rateLimit({
   message: "Too many requests, please try again later.",
 });
 
+// Login-specific limiter: 10 attempts per minute per IP
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: "Too many login attempts, please try again later.",
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    // Render forwards X-Forwarded-For; trust proxy set in index.js, also relax strict validation
+    xForwardedForHeader: false,
+  },
+  message: {
+    success: false,
+    message:
+      "Too many login attempts from this IP. Please wait 1 minute and try again.",
+  },
 });

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import { productsAPI, categoriesAPI } from "../../lib/api";
+import { productsAPI, categoriesAPI, ASSET_BASE_URL } from "../../lib/api";
 import { useToast } from "../../hooks/useToast";
 import { CategoryDialog } from "../../components/admin/CategoryDialog";
 import { Plus } from "lucide-react";
@@ -437,7 +437,7 @@ export function AdminProductEditPage() {
                     className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
                   >
                     <img
-                      src={`http://localhost:5000${img.path}`}
+                      src={`${ASSET_BASE_URL}${img.path}`}
                       alt={img.alt || "Product image"}
                       className="h-28 w-full object-cover"
                       loading="lazy"

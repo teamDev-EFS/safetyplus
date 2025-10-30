@@ -1,8 +1,9 @@
 // src/lib/apiAdmin.ts
 import axios from "axios";
+import { resolveApiBaseUrl } from "./api";
 
 const http = axios.create({
-  baseURL: "http://localhost:5000/api/admin",
+  baseURL: `${resolveApiBaseUrl()}/api/admin`,
   withCredentials: true,
 });
 

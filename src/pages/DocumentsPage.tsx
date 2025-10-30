@@ -11,6 +11,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { formatCurrency } from "../lib/utils";
+import { API_URL } from "../lib/api";
 
 interface Document {
   id: string;
@@ -37,9 +38,7 @@ export function DocumentsPage() {
       if (selectedCategory !== "all")
         params.append("category", selectedCategory);
 
-      const response = await fetch(
-        `http://localhost:5000/api/documents?${params}`
-      );
+      const response = await fetch(`${API_URL}/documents?${params}`);
       const data = await response.json();
       return data.documents || [];
     },
@@ -49,9 +48,7 @@ export function DocumentsPage() {
   const { data: categoriesData } = useQuery({
     queryKey: ["document-categories"],
     queryFn: async () => {
-      const response = await fetch(
-        "http://localhost:5000/api/documents/categories"
-      );
+      const response = await fetch(`${API_URL}/documents/categories`);
       const data = await response.json();
       return data.categories || [];
     },
@@ -63,7 +60,7 @@ export function DocumentsPage() {
   const handleDownload = (doc: Document) => {
     // Create download link
     const link = document.createElement("a");
-    link.href = `http://localhost:5000/api/documents/download/${doc.id}`;
+    link.href = `${API_URL}/documents/download/${doc.id}`;
     link.download = doc.name;
     link.click();
   };

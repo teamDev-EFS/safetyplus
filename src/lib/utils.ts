@@ -54,11 +54,13 @@ export function generateOrderNumber(): string {
   return `ORD-${timestamp}-${random}`;
 }
 
+import { ASSET_BASE_URL } from "./api";
+
 export function getImageUrl(path: string | null | undefined): string {
   if (!path) return "/placeholder.svg";
   if (path.startsWith("http")) return path;
   // For local uploads, construct full URL with backend server
-  return `http://localhost:5000${path}`;
+  return `${ASSET_BASE_URL}${path}`;
 }
 
 export function debounce<T extends (...args: any[]) => any>(

@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { useCartStore } from "../store/cartStore";
 import { useAuthStore } from "../store/authStore";
 import { formatCurrency } from "../lib/utils";
+import { API_URL } from "../lib/api";
 import { generateOrderNumber } from "../lib/utils";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useToast } from "../hooks/useToast";
@@ -142,7 +143,7 @@ export function CheckoutPage() {
       };
 
       // Use orders API to create order
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

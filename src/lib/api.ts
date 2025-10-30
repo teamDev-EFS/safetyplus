@@ -1,5 +1,5 @@
 // src/lib/api.ts
-function resolveApiBaseUrl(): string {
+export function resolveApiBaseUrl(): string {
   const fromEnv = (import.meta as any).env?.VITE_API_URL as string | undefined;
   if (fromEnv && typeof fromEnv === "string" && fromEnv.trim()) {
     return fromEnv.replace(/\/$/, "");
@@ -24,6 +24,7 @@ function resolveApiBaseUrl(): string {
 }
 
 const API_URL = `${resolveApiBaseUrl()}/api`;
+export const ASSET_BASE_URL = resolveApiBaseUrl();
 
 // Shared fetch helper (handles JSON & FormData, 204s)
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
-import { productsAPI } from "../../lib/api"; // ← already used across your app
+import { productsAPI, ASSET_BASE_URL, resolveApiBaseUrl } from "../../lib/api"; // unify bases
 
 type Message = {
   role: "user" | "assistant" | "system";
@@ -39,10 +39,7 @@ type Product = {
   images?: { path?: string }[];
 };
 
-const API_BASE =
-  (import.meta as any)?.env?.VITE_API_URL ||
-  (import.meta as any)?.env?.VITE_FILES_BASE_URL ||
-  "";
+const API_BASE = resolveApiBaseUrl();
 
 const PRODUCT_IMG = (p?: Product) =>
   p?.images?.[0]?.path
@@ -55,7 +52,7 @@ function getImageUrl(path?: string) {
   const cleaned = path.startsWith("http")
     ? path
     : path.replace(/^\/?uploads\//, "/uploads/");
-  const base = (import.meta as any)?.env?.VITE_FILES_BASE_URL || API_BASE || "";
+  const base = ASSET_BASE_URL || API_BASE || "";
   if (!base) return cleaned;
   if (/^https?:\/\//i.test(cleaned)) return cleaned;
   const withSlash = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;

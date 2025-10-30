@@ -2,26 +2,12 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/ui/Button";
-import {
-  Users,
-  Shield,
-  BadgeCheck,
-  Linkedin,
-  Mail,
-  Phone,
-  X,
-  Filter,
-} from "lucide-react";
+import { Users, Shield, BadgeCheck, Linkedin, Mail, Phone, X, Filter } from "lucide-react";
+import { ASSET_BASE_URL, resolveApiBaseUrl } from "../lib/api";
 
-/** -------------------------------------------------------
- *  Configure where images are served from
- *  .env: VITE_FILES_BASE_URL=https://your-backend.com
- *  (fallbacks: VITE_API_URL, then http://localhost:5000)
- * ------------------------------------------------------*/
-const FILES_BASE =
-  (import.meta as any)?.env?.VITE_FILES_BASE_URL ||
-  (import.meta as any)?.env?.VITE_API_URL ||
-  "http://localhost:5000";
+/** Base origins */
+const FILES_BASE = ASSET_BASE_URL;
+const API_BASE = resolveApiBaseUrl();
 
 /** Convert a stored file path into an absolute URL on the backend. */
 function fileUrl(path?: string | null): string | null {
@@ -62,7 +48,7 @@ type TeamMember = {
 
 /** ---------- Data Fetch ---------- */
 async function fetchTeam(): Promise<TeamMember[]> {
-  const res = await fetch(`${FILES_BASE.replace(/\/$/, "")}/api/team`, {
+  const res = await fetch(`${API_BASE.replace(/\/$/, "")}/api/team`, {
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to load team");

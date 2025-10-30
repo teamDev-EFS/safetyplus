@@ -15,6 +15,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 
 import { teamAPI } from "../../lib/apiAdmin";
+import { ASSET_BASE_URL } from "../../lib/api";
 import AdminModal from "../../components/admin/AdminModal";
 import ImageDropzone from "../../components/admin/ImageDropZone";
 import { Button } from "../../components/ui/Button";
@@ -22,10 +23,7 @@ import { ConfirmDialog } from "../../components/admin/ConfirmDialog";
 import { X } from "lucide-react";
 
 /* ---------- Files base URL ---------- */
-const FILES_BASE =
-  (import.meta as any)?.env?.VITE_FILES_BASE_URL ||
-  (import.meta as any)?.env?.VITE_API_URL ||
-  "http://localhost:5000";
+const FILES_BASE = ASSET_BASE_URL;
 
 /** Convert stored relative path to absolute URL (works for `/team/...` or `/uploads/team/...`) */
 function fileUrl(path?: string | null): string | null {

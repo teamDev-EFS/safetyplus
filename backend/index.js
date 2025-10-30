@@ -92,8 +92,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve static files from a configurable uploads directory
+const UPLOADS_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.join(__dirname, "uploads");
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 // MongoDB connection
 const connectDB = async () => {

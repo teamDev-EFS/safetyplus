@@ -8,15 +8,19 @@ import fs from "fs";
  * You can pass any of these keys to setBucket(key).
  * If you pass a custom path to setBucket("/some/dir"), that path will be used directly.
  */
+const UPLOADS_ROOT = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.resolve(process.cwd(), "uploads");
+
 const BUCKET_DIRS = {
-  team: "uploads/team",
-  products: "uploads/products",
-  branches: "uploads/branches",
-  posts: "uploads/posts",
-  "gallery/albums": "uploads/gallery/albums",
-  "gallery/images": "uploads/gallery/images",
-  settings: "uploads/settings",
-  default: "uploads",
+  team: "team",
+  products: "products",
+  branches: "branches",
+  posts: "posts",
+  "gallery/albums": path.join("gallery", "albums"),
+  "gallery/images": path.join("gallery", "images"),
+  settings: "settings",
+  default: ".",
 };
 
 const createDirectories = (dir) => {
@@ -36,26 +40,28 @@ function resolveDest(req, file) {
   // 1) setBucket override (supports key or direct path)
   if (req.bucket) {
     // If it's a known key, map it; otherwise treat as a path
-    return BUCKET_DIRS[req.bucket] || req.bucket;
+    const v = BUCKET_DIRS[req.bucket] || req.bucket;
+    // If absolute path provided, use as-is; else resolve under UPLOADS_ROOT
+    return path.isAbsolute(v) ? v : path.join(UPLOADS_ROOT, v);
   }
 
   // 2) Backward-compatible fieldname mapping
   switch (file.fieldname) {
     case "photo":
-      return BUCKET_DIRS.team;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.team);
     case "cover":
-      return BUCKET_DIRS["gallery/albums"];
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS["gallery/albums"]);
     case "images":
-      return BUCKET_DIRS.products;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.products);
     case "branchImage":
-      return BUCKET_DIRS.branches;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.branches);
     case "postCover":
-      return BUCKET_DIRS.posts;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.posts);
     // New: hero banner for site settings
     case "hero":
-      return BUCKET_DIRS.settings;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.settings);
     default:
-      return BUCKET_DIRS.default;
+      return path.join(UPLOADS_ROOT, BUCKET_DIRS.default);
   }
 }
 

@@ -7,6 +7,19 @@ const http = axios.create({
   withCredentials: true,
 });
 
+// Attach bearer token from localStorage if present
+http.interceptors.request.use((config) => {
+  try {
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("access");
+    if (token) {
+      config.headers = config.headers || {};
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
+  } catch {}
+  return config;
+});
+
 // TEAM
 export const teamAPI = {
   list: () => http.get("/team").then((r) => r.data),

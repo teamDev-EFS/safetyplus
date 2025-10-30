@@ -4,5 +4,12 @@
 # Proxy Socket.IO (websockets) to Render backend
 /socket.io/*  https://safetyplus-backend.onrender.com/socket.io/:splat  200
 
-# SPA fallback
-/*  /index.html  200
+# cPanel shortcut (real server is on cPanel host, not Netlify)
+#/cpanel -> your hosting panel
+/cpanel  https://cpanel.safetyplus.co.in:2083  302
+
+# (optional) also let /webmail go to hosting
+/webmail  https://webmail.safetyplus.co.in/  302
+
+# SPA fallback (keep LAST)
+ /*  /index.html  200

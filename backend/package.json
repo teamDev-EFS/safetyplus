@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js",
-    "seed": "node scripts/seed.js"
+    "start": "NODE_ENV=production node index.js",
+    "seed": "node scripts/seed.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "build": "echo 'No build step needed for backend'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
